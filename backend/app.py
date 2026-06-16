@@ -213,6 +213,23 @@ def delete_repotting(plant_id, repot_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/plants/<int:plant_id>/watering", methods=["GET"])
+def list_watering(plant_id):
+    """获取指定植物的全部浇水记录，按日期从新到旧排序。"""
+    conn = get_db()
+    existing = conn.execute("SELECT id FROM plants WHERE id = ?", (plant_id,)).fetchone()
+    if not existing:
+        conn.close()
+        return jsonify({"error": "植物不存在"}), 404
+
+    rows = conn.execute(
+        "SELECT * FROM watering WHERE plant_id = ? ORDER BY date DESC, id DESC",
+        (plant_id,),
+    ).fetchall()
+    conn.close()
+    return jsonify([row_to_dict(r) for r in rows])
+
+
 @app.route("/api/plants/<int:plant_id>/watering", methods=["POST"])
 def create_watering(plant_id):
     """为植物添加浇水记录。"""

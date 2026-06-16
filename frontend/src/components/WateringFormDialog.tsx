@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,9 @@ interface WateringFormDialogProps {
   onSubmit: (data: WateringFormValues) => Promise<void>;
 }
 
+/**
+ * 浇水记录新增/编辑对话框。
+ */
 export function WateringFormDialog({
   open,
   onOpenChange,
@@ -34,23 +38,30 @@ export function WateringFormDialog({
   } = useForm<WateringFormValues>({
     resolver: zodResolver(wateringSchema),
     defaultValues: {
-      date: record?.date ?? "",
-      notes: record?.notes ?? "",
+      date: "",
+      notes: "",
     },
   });
 
-  const handleOpenChange = (next: boolean) => {
-    if (next) {
+  useEffect(() => {
+    if (open) {
       reset({
         date: record?.date ?? "",
         notes: record?.notes ?? "",
       });
+    }
+  }, [open, record, reset]);
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      reset({ date: "", notes: "" });
     }
     onOpenChange(next);
   };
 
   const submit = async (data: WateringFormValues) => {
     await onSubmit(data);
+    reset({ date: "", notes: "" });
     onOpenChange(false);
   };
 
@@ -80,7 +91,7 @@ export function WateringFormDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               取消
             </Button>

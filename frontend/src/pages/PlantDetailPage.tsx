@@ -8,7 +8,6 @@ import {
   Pencil,
   Trash2,
   Sprout,
-  Droplets,
 } from "lucide-react";
 import {
   fetchPlant,
@@ -335,17 +334,17 @@ export function PlantDetailPage() {
                 />
               )}
               <div
-                className="mt-1 h-[22px] w-[22px] shrink-0 rounded-full border-2 border-sky-500 bg-background flex items-center justify-center"
+                className="mt-1 h-[22px] w-[22px] shrink-0 rounded-full border-2 border-primary bg-background flex items-center justify-center"
                 aria-hidden
               >
-                <div className="h-2 w-2 rounded-full bg-sky-500" />
+                <div className="h-2 w-2 rounded-full bg-primary" />
               </div>
               <Card className="flex-1">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-base flex items-center gap-2">
-                        <Droplets className="h-4 w-4 text-sky-500" />
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
                         {record.date}
                       </CardTitle>
                       {record.notes && (

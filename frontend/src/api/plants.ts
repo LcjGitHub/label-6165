@@ -96,6 +96,11 @@ export function deleteRepotting(
   });
 }
 
+/** 获取指定植物的全部浇水记录 */
+export function fetchWateringList(plantId: number): Promise<Watering[]> {
+  return request(`${API_BASE}/plants/${plantId}/watering`);
+}
+
 /** 添加浇水记录 */
 export function createWatering(
   plantId: number,
