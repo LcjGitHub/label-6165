@@ -105,12 +105,12 @@ export function PlantListPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <header className="space-y-4">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex-shrink-0">
             <h1 className="text-2xl font-bold tracking-tight">家庭盆栽</h1>
             <p className="text-sm text-muted-foreground">换盆历史记录</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <Select
