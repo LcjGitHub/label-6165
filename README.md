@@ -62,6 +62,70 @@ cd backend
 pytest smoke_test.py -v
 ```
 
+### 5. 执行后端模块自动化测试
+
+项目已按模块组织了完整的自动化测试套件，使用独立的临时测试数据库，不会污染本地开发数据。测试文件位于 `backend/tests/` 目录，与 `routes/` 源码目录结构对应：
+
+```
+backend/
+├── routes/           # 源码目录
+│   ├── plants.py     # 植物模块
+│   └── repotting.py  # 换盆记录模块
+└── tests/            # 测试目录（与源码对应）
+    ├── conftest.py   # 共享测试配置（测试数据库隔离）
+    ├── test_plants.py     # 植物模块测试
+    └── test_repotting.py  # 换盆记录模块测试
+```
+
+#### 一键运行全部测试
+
+```bash
+cd backend
+pytest tests/ -v
+```
+
+或使用简写：
+
+```bash
+cd backend
+pytest -v
+```
+
+#### 单个模块运行
+
+运行植物模块测试：
+
+```bash
+cd backend
+pytest tests/test_plants.py -v
+```
+
+运行换盆记录模块测试：
+
+```bash
+cd backend
+pytest tests/test_repotting.py -v
+```
+
+运行特定测试类：
+
+```bash
+cd backend
+pytest tests/test_plants.py::TestCreatePlant -v
+```
+
+运行单个测试用例：
+
+```bash
+cd backend
+pytest tests/test_plants.py::TestCreatePlant::test_create_plant_success -v
+```
+
+#### 测试覆盖场景
+
+- **植物模块**：创建植物（成功/验证失败/边界情况）、按编号查询详情、列表查询与过滤、更新植物、删除植物及关联换盆/浇水记录级联清除
+- **换盆记录模块**：添加换盆记录、查询详情中的换盆时间线排序、更新换盆记录、删除换盆记录、多条记录管理
+
 ## 技术栈
 
 | 层级 | 技术 |
@@ -107,6 +171,8 @@ npm run dev
 │   ├── app.py        # 入口与路由
 │   ├── db.py         # SQLite 连接
 │   ├── seed.py       # 种子数据
+│   ├── routes/       # API 路由模块
+│   ├── tests/        # 自动化测试（与 routes 对应）
 │   └── data/         # 数据库文件（运行时生成）
 ├── frontend/         # React 前端
 │   └── src/

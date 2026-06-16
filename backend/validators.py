@@ -1,4 +1,16 @@
+from datetime import datetime
+
 LOCATION_OPTIONS = {"客厅", "阳台", "卧室", "书房", "其他"}
+
+
+def is_valid_date(date_str):
+    if not date_str:
+        return False
+    try:
+        datetime.strptime(date_str, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
 
 
 def validate_plant(data):
@@ -12,6 +24,8 @@ def validate_plant(data):
         errors.append("名称不能为空")
     if not purchase_date:
         errors.append("购入日期不能为空")
+    elif not is_valid_date(purchase_date):
+        errors.append("购入日期格式不正确，应为 YYYY-MM-DD")
     if not location:
         errors.append("位置不能为空")
     elif location not in LOCATION_OPTIONS:
@@ -41,6 +55,8 @@ def validate_repotting(data):
     pot_diameter_cm = data.get("pot_diameter_cm")
     if not date:
         errors.append("换盆日期不能为空")
+    elif not is_valid_date(date):
+        errors.append("换盆日期格式不正确，应为 YYYY-MM-DD")
     if pot_diameter_cm is not None and pot_diameter_cm != "":
         try:
             pot_diameter_cm = int(pot_diameter_cm)
