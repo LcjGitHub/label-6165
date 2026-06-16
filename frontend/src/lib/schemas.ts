@@ -12,6 +12,12 @@ export const plantSchema = z.object({
     .refine((val) => LOCATION_OPTIONS.includes(val), {
       message: "请选择位置",
     }),
+  repot_interval_months: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "string" ? parseInt(val, 10) : val))
+    .refine((val) => !Number.isNaN(val) && val > 0, {
+      message: "建议换盆间隔月数必须大于 0",
+    }),
 });
 
 /** 换盆记录表单校验 schema */

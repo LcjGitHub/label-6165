@@ -13,8 +13,12 @@ export interface Plant {
   variety: string;
   purchase_date: string;
   location: string;
+  repot_interval_months: number;
   created_at: string;
   repotting_count?: number;
+  days_since_last_repotting?: number | null;
+  next_repotting_date?: string | null;
+  is_overdue?: boolean;
 }
 
 export interface Repotting {
@@ -43,6 +47,7 @@ export interface PlantInput {
   variety: string;
   purchase_date: string;
   location: string;
+  repot_interval_months: number;
 }
 
 export interface RepottingInput {

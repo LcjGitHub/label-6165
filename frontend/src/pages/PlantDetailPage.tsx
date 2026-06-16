@@ -9,6 +9,8 @@ import {
   Trash2,
   Sprout,
   MapPin,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 import {
   fetchPlant,
@@ -244,6 +246,34 @@ export function PlantDetailPage() {
             <span className="text-muted-foreground">摆放位置：</span>
             {plant.location || "—"}
           </p>
+          <p>
+            <span className="text-muted-foreground">建议换盆间隔：</span>
+            {plant.repot_interval_months} 个月
+          </p>
+          {plant.next_repotting_date && (
+            <p
+              className={`flex items-center gap-1 ${
+                plant.is_overdue ? "text-destructive font-medium" : ""
+              }`}
+            >
+              {plant.is_overdue ? (
+                <AlertTriangle className="h-3.5 w-3.5" />
+              ) : (
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+              <span className="text-muted-foreground">建议下次换盆：</span>
+              {plant.next_repotting_date}
+              {plant.is_overdue && (
+                <span className="ml-1">（已超期）</span>
+              )}
+            </p>
+          )}
+          {plant.days_since_last_repotting != null && (
+            <p>
+              <span className="text-muted-foreground">距上次换盆：</span>
+              {plant.days_since_last_repotting} 天
+            </p>
+          )}
         </CardContent>
       </Card>
 

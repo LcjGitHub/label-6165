@@ -54,6 +54,8 @@ def init_db():
     columns = [col[1] for col in cursor.fetchall()]
     if "location" not in columns:
         conn.execute("ALTER TABLE plants ADD COLUMN location TEXT NOT NULL DEFAULT ''")
+    if "repot_interval_months" not in columns:
+        conn.execute("ALTER TABLE plants ADD COLUMN repot_interval_months INTEGER NOT NULL DEFAULT 12")
 
     conn.commit()
     conn.close()

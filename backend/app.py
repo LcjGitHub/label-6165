@@ -1,5 +1,6 @@
 """家庭盆栽换盆历史 — Flask API 服务。"""
 
+from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
@@ -15,6 +16,53 @@ CORS(app, origins=[
 LOCATION_OPTIONS = {"客厅", "阳台", "卧室", "书房", "其他"}
 
 
+def add_months(date_str, months):
+    """在指定日期基础上增加月数，返回日期字符串。"""
+    d = datetime.strptime(date_str, "%Y-%m-%d")
+    month = d.month - 1 + months
+    year = d.year + month // 12
+    month = month % 12 + 1
+    day = min(d.day, [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1])
+    return d.replace(year=year, month=month, day=day).strftime("%Y-%m-%d")
+
+
+def compute_repotting_info(plant_dict, last_repot_date):
+    """计算换盆相关信息：距上次换盆天数、建议下次换盆日期、是否超期。"""
+    interval_months = plant_dict.get("repot_interval_months", 12)
+    if not interval_months:
+        interval_months = 12
+
+    start_date = last_repot_date if last_repot_date else plant_dict.get("purchase_date")
+    if not start_date:
+        return {
+            "days_since_last_repotting": None,
+            "next_repotting_date": None,
+            "is_overdue": False,
+        }
+
+    today = datetime.now().date()
+    last_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+    days_since = (today - last_date).days
+    next_date = add_months(start_date, interval_months)
+    next_dt = datetime.strptime(next_date, "%Y-%m-%d").date()
+    is_overdue = today > next_dt
+
+    return {
+        "days_since_last_repotting": days_since,
+        "next_repotting_date": next_date,
+        "is_overdue": is_overdue,
+    }
+
+
+def get_last_repotting_date(conn, plant_id):
+    """获取植物最近一次换盆日期。"""
+    row = conn.execute(
+        "SELECT date FROM repotting WHERE plant_id = ? ORDER BY date DESC, id DESC LIMIT 1",
+        (plant_id,),
+    ).fetchone()
+    return row["date"] if row else None
+
+
 def validate_plant(data):
     """校验植物字段。"""
     errors = []
@@ -22,6 +70,7 @@ def validate_plant(data):
     variety = (data.get("variety") or "").strip()
     purchase_date = (data.get("purchase_date") or "").strip()
     location = (data.get("location") or "").strip()
+    repot_interval_months = data.get("repot_interval_months")
     if not name:
         errors.append("名称不能为空")
     if not purchase_date:
@@ -30,7 +79,22 @@ def validate_plant(data):
         errors.append("位置不能为空")
     elif location not in LOCATION_OPTIONS:
         errors.append("位置必须是客厅、阳台、卧室、书房、其他中的一个")
-    return errors, {"name": name, "variety": variety, "purchase_date": purchase_date, "location": location}
+    if repot_interval_months is not None:
+        try:
+            repot_interval_months = int(repot_interval_months)
+            if repot_interval_months <= 0:
+                errors.append("建议换盆间隔月数必须大于 0")
+        except (ValueError, TypeError):
+            errors.append("建议换盆间隔月数必须是数字")
+    else:
+        repot_interval_months = 12
+    return errors, {
+        "name": name,
+        "variety": variety,
+        "purchase_date": purchase_date,
+        "location": location,
+        "repot_interval_months": repot_interval_months,
+    }
 
 
 def validate_repotting(data):
@@ -55,14 +119,15 @@ def validate_watering(data):
 
 @app.route("/api/plants", methods=["GET"])
 def list_plants():
-    """获取植物列表（含换盆次数），支持按位置筛选。"""
+    """获取植物列表（含换盆次数和换盆提醒信息），支持按位置筛选。"""
     location = request.args.get("location", "").strip()
     conn = get_db()
 
     if location and location in LOCATION_OPTIONS:
         rows = conn.execute(
             """
-            SELECT p.*, COUNT(r.id) AS repotting_count
+            SELECT p.*, COUNT(r.id) AS repotting_count,
+                   (SELECT MAX(date) FROM repotting WHERE plant_id = p.id) AS last_repotting_date
             FROM plants p
             LEFT JOIN repotting r ON r.plant_id = p.id
             WHERE p.location = ?
@@ -74,7 +139,8 @@ def list_plants():
     else:
         rows = conn.execute(
             """
-            SELECT p.*, COUNT(r.id) AS repotting_count
+            SELECT p.*, COUNT(r.id) AS repotting_count,
+                   (SELECT MAX(date) FROM repotting WHERE plant_id = p.id) AS last_repotting_date
             FROM plants p
             LEFT JOIN repotting r ON r.plant_id = p.id
             GROUP BY p.id
@@ -82,8 +148,16 @@ def list_plants():
             """
         ).fetchall()
 
+    result = []
+    for row in rows:
+        plant = row_to_dict(row)
+        last_repot = plant.pop("last_repotting_date", None)
+        repot_info = compute_repotting_info(plant, last_repot)
+        plant.update(repot_info)
+        result.append(plant)
+
     conn.close()
-    return jsonify([row_to_dict(r) for r in rows])
+    return jsonify(result)
 
 
 @app.route("/api/plants/<int:plant_id>", methods=["GET"])
@@ -103,11 +177,14 @@ def get_plant(plant_id):
         "SELECT * FROM watering WHERE plant_id = ? ORDER BY date DESC, id DESC",
         (plant_id,),
     ).fetchall()
-    conn.close()
 
+    last_repot_date = repotting[0]["date"] if repotting else None
     result = row_to_dict(plant)
+    repot_info = compute_repotting_info(result, last_repot_date)
+    result.update(repot_info)
     result["repotting"] = [row_to_dict(r) for r in repotting]
     result["watering"] = [row_to_dict(w) for w in watering]
+    conn.close()
     return jsonify(result)
 
 
@@ -120,14 +197,18 @@ def create_plant():
 
     conn = get_db()
     cursor = conn.execute(
-        "INSERT INTO plants (name, variety, purchase_date, location) VALUES (?, ?, ?, ?)",
-        (fields["name"], fields["variety"], fields["purchase_date"], fields["location"]),
+        "INSERT INTO plants (name, variety, purchase_date, location, repot_interval_months) VALUES (?, ?, ?, ?, ?)",
+        (fields["name"], fields["variety"], fields["purchase_date"], fields["location"], fields["repot_interval_months"]),
     )
     plant_id = cursor.lastrowid
     conn.commit()
     plant = conn.execute("SELECT * FROM plants WHERE id = ?", (plant_id,)).fetchone()
+    last_repot = get_last_repotting_date(conn, plant_id)
+    result = row_to_dict(plant)
+    repot_info = compute_repotting_info(result, last_repot)
+    result.update(repot_info)
     conn.close()
-    return jsonify(row_to_dict(plant)), 201
+    return jsonify(result), 201
 
 
 @app.route("/api/plants/<int:plant_id>", methods=["PUT"])
@@ -144,13 +225,17 @@ def update_plant(plant_id):
         return jsonify({"error": "植物不存在"}), 404
 
     conn.execute(
-        "UPDATE plants SET name = ?, variety = ?, purchase_date = ?, location = ? WHERE id = ?",
-        (fields["name"], fields["variety"], fields["purchase_date"], fields["location"], plant_id),
+        "UPDATE plants SET name = ?, variety = ?, purchase_date = ?, location = ?, repot_interval_months = ? WHERE id = ?",
+        (fields["name"], fields["variety"], fields["purchase_date"], fields["location"], fields["repot_interval_months"], plant_id),
     )
     conn.commit()
     plant = conn.execute("SELECT * FROM plants WHERE id = ?", (plant_id,)).fetchone()
+    last_repot = get_last_repotting_date(conn, plant_id)
+    result = row_to_dict(plant)
+    repot_info = compute_repotting_info(result, last_repot)
+    result.update(repot_info)
     conn.close()
-    return jsonify(row_to_dict(plant))
+    return jsonify(result)
 
 
 @app.route("/api/plants/<int:plant_id>", methods=["DELETE"])

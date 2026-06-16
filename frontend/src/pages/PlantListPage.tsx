@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin } from "lucide-react";
+import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin, AlertTriangle } from "lucide-react";
 import { fetchPlants, createPlant, updatePlant, deletePlant } from "@/api/plants";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -136,14 +136,29 @@ export function PlantListPage() {
       {plants && plants.length > 0 && (
         <div className="grid gap-4">
           {plants.map((plant) => (
-            <Card key={plant.id} className="transition-shadow hover:shadow-md">
+            <Card
+              key={plant.id}
+              className={`transition-shadow hover:shadow-md ${
+                plant.is_overdue
+                  ? "border-destructive border-2"
+                  : ""
+              }`}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                  <Link to={`/plants/${plant.id}`} className="group">
-                    <CardTitle className="group-hover:text-primary transition-colors">
-                      <Leaf className="inline h-5 w-5 mr-2 text-primary" />
-                      {plant.name}
-                    </CardTitle>
+                  <Link to={`/plants/${plant.id}`} className="group flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <CardTitle className="group-hover:text-primary transition-colors">
+                        <Leaf className="inline h-5 w-5 mr-2 text-primary" />
+                        {plant.name}
+                      </CardTitle>
+                      {plant.is_overdue && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-destructive text-destructive-foreground">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          换盆超期
+                        </span>
+                      )}
+                    </div>
                     {plant.variety && (
                       <CardDescription className="mt-1">
                         品种：{plant.variety}
@@ -177,12 +192,21 @@ export function PlantListPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     购入：{plant.purchase_date}
                   </span>
                   <span>换盆 {plant.repotting_count ?? 0} 次</span>
+                  {plant.next_repotting_date && (
+                    <span
+                      className={`flex items-center gap-1 ${
+                        plant.is_overdue ? "text-destructive font-medium" : ""
+                      }`}
+                    >
+                      下次换盆：{plant.next_repotting_date}
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>

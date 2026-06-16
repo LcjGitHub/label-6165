@@ -42,6 +42,7 @@ export function PlantFormDialog({
       variety: "",
       purchase_date: "",
       location: "客厅",
+      repot_interval_months: 12,
     },
   });
 
@@ -52,20 +53,33 @@ export function PlantFormDialog({
         variety: plant?.variety ?? "",
         purchase_date: plant?.purchase_date ?? "",
         location: plant?.location ?? "客厅",
+        repot_interval_months: plant?.repot_interval_months ?? 12,
       });
     }
   }, [open, plant, reset]);
 
   const handleOpenChange = (next: boolean) => {
     if (!next) {
-      reset({ name: "", variety: "", purchase_date: "", location: "客厅" });
+      reset({
+        name: "",
+        variety: "",
+        purchase_date: "",
+        location: "客厅",
+        repot_interval_months: 12,
+      });
     }
     onOpenChange(next);
   };
 
   const submit = async (data: PlantFormValues) => {
     await onSubmit(data);
-    reset({ name: "", variety: "", purchase_date: "", location: "客厅" });
+    reset({
+      name: "",
+      variety: "",
+      purchase_date: "",
+      location: "客厅",
+      repot_interval_months: 12,
+    });
     onOpenChange(false);
   };
 
@@ -112,6 +126,20 @@ export function PlantFormDialog({
             {errors.location && (
               <p className="text-sm text-destructive">
                 {errors.location.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="repot_interval_months">建议换盆间隔（月）</Label>
+            <Input
+              id="repot_interval_months"
+              type="number"
+              min="1"
+              {...register("repot_interval_months")}
+            />
+            {errors.repot_interval_months && (
+              <p className="text-sm text-destructive">
+                {errors.repot_interval_months.message}
               </p>
             )}
           </div>
