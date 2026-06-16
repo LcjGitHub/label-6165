@@ -472,7 +472,6 @@ export function PlantDetailPage() {
         onOpenChange={setDeleteDialogOpen}
         plantName={plant?.name ?? ""}
         repottingCount={plant?.repotting.length ?? 0}
-        wateringCount={plant?.watering.length ?? 0}
         onConfirm={confirmDeletePlant}
       />
     </div>
