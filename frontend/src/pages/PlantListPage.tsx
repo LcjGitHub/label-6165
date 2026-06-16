@@ -26,6 +26,7 @@ export function PlantListPage() {
   const [editingPlant, setEditingPlant] = useState<Plant | undefined>();
   const [locationFilter, setLocationFilter] = useState<string>("");
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<boolean>(false);
 
   const { data: plants, isLoading, error } = useQuery({
     queryKey: ["plants", locationFilter],
@@ -77,9 +78,12 @@ export function PlantListPage() {
   };
 
   const handleExport = async () => {
+    setExportError(false);
     setExporting(true);
     try {
       await exportPlants();
+    } catch (e) {
+      setExportError(true);
     } finally {
       setExporting(false);
     }
@@ -133,7 +137,7 @@ export function PlantListPage() {
         <p className="text-center text-muted-foreground py-12">加载中…</p>
       )}
 
-      {error && (
+      {(error || exportError) && (
         <p className="text-center text-destructive py-12">
           网络连接失败，请确认后端服务已启动
         </p>
