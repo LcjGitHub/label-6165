@@ -1,0 +1,33 @@
+/** API 类型定义 */
+
+export interface Plant {
+  id: number;
+  name: string;
+  variety: string;
+  purchase_date: string;
+  created_at: string;
+  repotting_count?: number;
+}
+
+export interface Repotting {
+  id: number;
+  plant_id: number;
+  date: string;
+  notes: string;
+  created_at: string;
+}
+
+export interface PlantDetail extends Plant {
+  repotting: Repotting[];
+}
+
+export interface PlantInput {
+  name: string;
+  variety: string;
+  purchase_date: string;
+}
+
+export interface RepottingInput {
+  date: string;
+  notes: string;
+}
