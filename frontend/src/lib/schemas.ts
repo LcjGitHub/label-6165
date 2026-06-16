@@ -13,5 +13,12 @@ export const repottingSchema = z.object({
   notes: z.string(),
 });
 
+/** 浇水记录表单校验 schema */
+export const wateringSchema = z.object({
+  date: z.string().min(1, "浇水日期不能为空"),
+  notes: z.string(),
+});
+
 export type PlantFormValues = z.infer<typeof plantSchema>;
 export type RepottingFormValues = z.infer<typeof repottingSchema>;
+export type WateringFormValues = z.infer<typeof wateringSchema>;

@@ -37,6 +37,15 @@ def init_db():
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS watering (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plant_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            notes TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
+        );
         """
     )
     conn.commit()

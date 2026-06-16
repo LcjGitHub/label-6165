@@ -8,6 +8,7 @@ import {
   Pencil,
   Trash2,
   Sprout,
+  Droplets,
 } from "lucide-react";
 import {
   fetchPlant,
@@ -16,6 +17,9 @@ import {
   createRepotting,
   updateRepotting,
   deleteRepotting,
+  createWatering,
+  updateWatering,
+  deleteWatering,
 } from "@/api/plants";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,12 +31,14 @@ import {
 } from "@/components/ui/card";
 import { PlantFormDialog } from "@/components/PlantFormDialog";
 import { RepottingFormDialog } from "@/components/RepottingFormDialog";
-import type { Repotting } from "@/types";
-import type { PlantFormValues, RepottingFormValues } from "@/lib/schemas";
+import { WateringFormDialog } from "@/components/WateringFormDialog";
+import type { Repotting, Watering } from "@/types";
+import type {
+  PlantFormValues,
+  RepottingFormValues,
+  WateringFormValues,
+} from "@/lib/schemas";
 
-/**
- * 植物详情页：展示换盆时间线，支持换盆 CRUD。
- */
 export function PlantDetailPage() {
   const { id } = useParams<{ id: string }>();
   const plantId = Number(id);
@@ -42,6 +48,8 @@ export function PlantDetailPage() {
   const [plantDialogOpen, setPlantDialogOpen] = useState(false);
   const [repotDialogOpen, setRepotDialogOpen] = useState(false);
   const [editingRepot, setEditingRepot] = useState<Repotting | undefined>();
+  const [waterDialogOpen, setWaterDialogOpen] = useState(false);
+  const [editingWater, setEditingWater] = useState<Watering | undefined>();
 
   const { data: plant, isLoading, error } = useQuery({
     queryKey: ["plant", plantId],
@@ -88,6 +96,27 @@ export function PlantDetailPage() {
     onSuccess: invalidate,
   });
 
+  const createWaterMutation = useMutation({
+    mutationFn: (data: WateringFormValues) => createWatering(plantId, data),
+    onSuccess: invalidate,
+  });
+
+  const updateWaterMutation = useMutation({
+    mutationFn: ({
+      wateringId,
+      data,
+    }: {
+      wateringId: number;
+      data: WateringFormValues;
+    }) => updateWatering(plantId, wateringId, data),
+    onSuccess: invalidate,
+  });
+
+  const deleteWaterMutation = useMutation({
+    mutationFn: (wateringId: number) => deleteWatering(plantId, wateringId),
+    onSuccess: invalidate,
+  });
+
   const handlePlantSubmit = async (data: PlantFormValues) => {
     await updatePlantMutation.mutateAsync(data);
   };
@@ -100,6 +129,17 @@ export function PlantDetailPage() {
       });
     } else {
       await createRepotMutation.mutateAsync(data);
+    }
+  };
+
+  const handleWaterSubmit = async (data: WateringFormValues) => {
+    if (editingWater) {
+      await updateWaterMutation.mutateAsync({
+        wateringId: editingWater.id,
+        data,
+      });
+    } else {
+      await createWaterMutation.mutateAsync(data);
     }
   };
 
@@ -116,6 +156,21 @@ export function PlantDetailPage() {
   const handleDeleteRepot = async (record: Repotting) => {
     if (!confirm(`确定删除 ${record.date} 的换盆记录？`)) return;
     await deleteRepotMutation.mutateAsync(record.id);
+  };
+
+  const openCreateWater = () => {
+    setEditingWater(undefined);
+    setWaterDialogOpen(true);
+  };
+
+  const openEditWater = (record: Watering) => {
+    setEditingWater(record);
+    setWaterDialogOpen(true);
+  };
+
+  const handleDeleteWater = async (record: Watering) => {
+    if (!confirm(`确定删除 ${record.date} 的浇水记录？`)) return;
+    await deleteWaterMutation.mutateAsync(record.id);
   };
 
   const handleDeletePlant = async () => {
@@ -255,6 +310,76 @@ export function PlantDetailPage() {
         </div>
       )}
 
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">浇水记录</h2>
+        <Button size="sm" onClick={openCreateWater}>
+          <Plus className="h-4 w-4" />
+          添加浇水
+        </Button>
+      </div>
+
+      {plant.watering.length === 0 && (
+        <p className="text-center text-muted-foreground py-8">
+          暂无浇水记录
+        </p>
+      )}
+
+      {plant.watering.length > 0 && (
+        <div className="relative space-y-0">
+          {plant.watering.map((record, index) => (
+            <div key={record.id} className="relative flex gap-4 pb-6">
+              {index < plant.watering.length - 1 && (
+                <div
+                  className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-border"
+                  aria-hidden
+                />
+              )}
+              <div
+                className="mt-1 h-[22px] w-[22px] shrink-0 rounded-full border-2 border-sky-500 bg-background flex items-center justify-center"
+                aria-hidden
+              >
+                <div className="h-2 w-2 rounded-full bg-sky-500" />
+              </div>
+              <Card className="flex-1">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Droplets className="h-4 w-4 text-sky-500" />
+                        {record.date}
+                      </CardTitle>
+                      {record.notes && (
+                        <CardDescription className="mt-2 text-foreground/80">
+                          {record.notes}
+                        </CardDescription>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEditWater(record)}
+                        aria-label="编辑"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteWater(record)}
+                        aria-label="删除"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            </div>
+          ))}
+        </div>
+      )}
+
       <PlantFormDialog
         open={plantDialogOpen}
         onOpenChange={setPlantDialogOpen}
@@ -267,6 +392,13 @@ export function PlantDetailPage() {
         onOpenChange={setRepotDialogOpen}
         record={editingRepot}
         onSubmit={handleRepotSubmit}
+      />
+
+      <WateringFormDialog
+        open={waterDialogOpen}
+        onOpenChange={setWaterDialogOpen}
+        record={editingWater}
+        onSubmit={handleWaterSubmit}
       />
     </div>
   );

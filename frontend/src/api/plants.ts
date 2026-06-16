@@ -4,6 +4,8 @@ import type {
   PlantInput,
   Repotting,
   RepottingInput,
+  Watering,
+  WateringInput,
 } from "@/types";
 
 const API_BASE = "http://localhost:7000/api";
@@ -90,6 +92,39 @@ export function deleteRepotting(
   repotId: number
 ): Promise<{ ok: boolean }> {
   return request(`${API_BASE}/plants/${plantId}/repotting/${repotId}`, {
+    method: "DELETE",
+  });
+}
+
+/** 添加浇水记录 */
+export function createWatering(
+  plantId: number,
+  data: WateringInput
+): Promise<Watering> {
+  return request(`${API_BASE}/plants/${plantId}/watering`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/** 更新浇水记录 */
+export function updateWatering(
+  plantId: number,
+  wateringId: number,
+  data: WateringInput
+): Promise<Watering> {
+  return request(`${API_BASE}/plants/${plantId}/watering/${wateringId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+/** 删除浇水记录 */
+export function deleteWatering(
+  plantId: number,
+  wateringId: number
+): Promise<{ ok: boolean }> {
+  return request(`${API_BASE}/plants/${plantId}/watering/${wateringId}`, {
     method: "DELETE",
   });
 }

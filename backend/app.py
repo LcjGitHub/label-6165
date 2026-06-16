@@ -33,6 +33,16 @@ def validate_repotting(data):
     return errors, {"date": date, "notes": notes}
 
 
+def validate_watering(data):
+    """校验浇水记录字段。"""
+    errors = []
+    date = (data.get("date") or "").strip()
+    notes = (data.get("notes") or "").strip()
+    if not date:
+        errors.append("浇水日期不能为空")
+    return errors, {"date": date, "notes": notes}
+
+
 @app.route("/api/plants", methods=["GET"])
 def list_plants():
     """获取植物列表（含换盆次数）。"""
@@ -63,10 +73,15 @@ def get_plant(plant_id):
         "SELECT * FROM repotting WHERE plant_id = ? ORDER BY date DESC, id DESC",
         (plant_id,),
     ).fetchall()
+    watering = conn.execute(
+        "SELECT * FROM watering WHERE plant_id = ? ORDER BY date DESC, id DESC",
+        (plant_id,),
+    ).fetchall()
     conn.close()
 
     result = row_to_dict(plant)
     result["repotting"] = [row_to_dict(r) for r in repotting]
+    result["watering"] = [row_to_dict(w) for w in watering]
     return jsonify(result)
 
 
@@ -122,6 +137,7 @@ def delete_plant(plant_id):
         return jsonify({"error": "植物不存在"}), 404
 
     conn.execute("DELETE FROM repotting WHERE plant_id = ?", (plant_id,))
+    conn.execute("DELETE FROM watering WHERE plant_id = ?", (plant_id,))
     conn.execute("DELETE FROM plants WHERE id = ?", (plant_id,))
     conn.commit()
     conn.close()
@@ -192,6 +208,75 @@ def delete_repotting(plant_id, repot_id):
         return jsonify({"error": "换盆记录不存在"}), 404
 
     conn.execute("DELETE FROM repotting WHERE id = ?", (repot_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/plants/<int:plant_id>/watering", methods=["POST"])
+def create_watering(plant_id):
+    """为植物添加浇水记录。"""
+    conn = get_db()
+    existing = conn.execute("SELECT id FROM plants WHERE id = ?", (plant_id,)).fetchone()
+    if not existing:
+        conn.close()
+        return jsonify({"error": "植物不存在"}), 404
+
+    errors, fields = validate_watering(request.json or {})
+    if errors:
+        conn.close()
+        return jsonify({"errors": errors}), 400
+
+    cursor = conn.execute(
+        "INSERT INTO watering (plant_id, date, notes) VALUES (?, ?, ?)",
+        (plant_id, fields["date"], fields["notes"]),
+    )
+    watering_id = cursor.lastrowid
+    conn.commit()
+    record = conn.execute("SELECT * FROM watering WHERE id = ?", (watering_id,)).fetchone()
+    conn.close()
+    return jsonify(row_to_dict(record)), 201
+
+
+@app.route("/api/plants/<int:plant_id>/watering/<int:watering_id>", methods=["PUT"])
+def update_watering(plant_id, watering_id):
+    """更新浇水记录。"""
+    errors, fields = validate_watering(request.json or {})
+    if errors:
+        return jsonify({"errors": errors}), 400
+
+    conn = get_db()
+    existing = conn.execute(
+        "SELECT id FROM watering WHERE id = ? AND plant_id = ?",
+        (watering_id, plant_id),
+    ).fetchone()
+    if not existing:
+        conn.close()
+        return jsonify({"error": "浇水记录不存在"}), 404
+
+    conn.execute(
+        "UPDATE watering SET date = ?, notes = ? WHERE id = ?",
+        (fields["date"], fields["notes"], watering_id),
+    )
+    conn.commit()
+    record = conn.execute("SELECT * FROM watering WHERE id = ?", (watering_id,)).fetchone()
+    conn.close()
+    return jsonify(row_to_dict(record))
+
+
+@app.route("/api/plants/<int:plant_id>/watering/<int:watering_id>", methods=["DELETE"])
+def delete_watering(plant_id, watering_id):
+    """删除浇水记录。"""
+    conn = get_db()
+    existing = conn.execute(
+        "SELECT id FROM watering WHERE id = ? AND plant_id = ?",
+        (watering_id, plant_id),
+    ).fetchone()
+    if not existing:
+        conn.close()
+        return jsonify({"error": "浇水记录不存在"}), 404
+
+    conn.execute("DELETE FROM watering WHERE id = ?", (watering_id,))
     conn.commit()
     conn.close()
     return jsonify({"ok": True})

@@ -17,8 +17,17 @@ export interface Repotting {
   created_at: string;
 }
 
+export interface Watering {
+  id: number;
+  plant_id: number;
+  date: string;
+  notes: string;
+  created_at: string;
+}
+
 export interface PlantDetail extends Plant {
   repotting: Repotting[];
+  watering: Watering[];
 }
 
 export interface PlantInput {
@@ -28,6 +37,11 @@ export interface PlantInput {
 }
 
 export interface RepottingInput {
+  date: string;
+  notes: string;
+}
+
+export interface WateringInput {
   date: string;
   notes: string;
 }
