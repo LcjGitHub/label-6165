@@ -133,48 +133,20 @@ export function PlantListPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
-      <header className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
+      <header className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex-shrink-0">
             <h1 className="text-2xl font-bold tracking-tight">家庭盆栽</h1>
             <p className="text-sm text-muted-foreground">换盆历史记录</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <Select
-                value={locationFilter}
-                onChange={(e) => setLocationFilter(e.target.value)}
-                className="w-32"
-              >
-                <option value="">全部位置</option>
-                {LOCATION_OPTIONS.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-              <Select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-40"
-              >
-                <option value="purchase_date_desc">购入日期：新→旧</option>
-                <option value="purchase_date_asc">购入日期：旧→新</option>
-                <option value="name_asc">名称拼音：正序</option>
-                <option value="name_desc">名称拼音：倒序</option>
-              </Select>
-            </div>
-            <Button variant="outline" asChild>
+          <div className="flex items-center gap-2 flex-nowrap flex-shrink-0">
+            <Button variant="outline" size="sm" asChild>
               <Link to="/overview">
                 <BarChart3 className="h-4 w-4" />
                 养护概览
               </Link>
             </Button>
-            <Button variant="outline" onClick={handleExport} disabled={exporting}>
+            <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
               {exporting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -182,10 +154,41 @@ export function PlantListPage() {
               )}
               {exporting ? "导出中…" : "导出数据"}
             </Button>
-            <Button onClick={openCreate}>
+            <Button size="sm" onClick={openCreate}>
               <Plus className="h-4 w-4" />
               添加植物
             </Button>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <Select
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="w-32"
+            >
+              <option value="">全部位置</option>
+              {LOCATION_OPTIONS.map((loc) => (
+                <option key={loc} value={loc}>
+                  {loc}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground whitespace-nowrap">排序</span>
+            <Select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-40"
+            >
+              <option value="purchase_date_desc">购入日期：新→旧</option>
+              <option value="purchase_date_asc">购入日期：旧→新</option>
+              <option value="name_asc">名称拼音：正序</option>
+              <option value="name_desc">名称拼音：倒序</option>
+            </Select>
           </div>
         </div>
         <div className="relative w-full">
