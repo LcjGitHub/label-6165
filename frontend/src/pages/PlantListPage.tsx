@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin, AlertTriangle, Download, Loader2, Search } from "lucide-react";
+import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin, AlertTriangle, Download, Loader2, Search, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { fetchPlants, createPlant, updatePlant, deletePlant, exportPlants } from "@/api/plants";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,16 @@ export function PlantListPage() {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<boolean>(false);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("plant_sort_by") || "purchase_date_desc";
+    }
+    return "purchase_date_desc";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("plant_sort_by", sortBy);
+  }, [sortBy]);
 
   const { data: plants, isLoading, error } = useQuery({
     queryKey: ["plants", locationFilter],
@@ -37,14 +47,33 @@ export function PlantListPage() {
 
   const filteredPlants = useMemo(() => {
     if (!plants) return [];
-    if (!searchKeyword.trim()) return plants;
-    const keyword = searchKeyword.trim().toLowerCase();
-    return plants.filter(
-      (plant) =>
-        plant.name.toLowerCase().includes(keyword) ||
-        (plant.variety && plant.variety.toLowerCase().includes(keyword))
-    );
-  }, [plants, searchKeyword]);
+    let result = [...plants];
+    if (searchKeyword.trim()) {
+      const keyword = searchKeyword.trim().toLowerCase();
+      result = result.filter(
+        (plant) =>
+          plant.name.toLowerCase().includes(keyword) ||
+          (plant.variety && plant.variety.toLowerCase().includes(keyword))
+      );
+    }
+    switch (sortBy) {
+      case "purchase_date_asc":
+        result.sort((a, b) => a.purchase_date.localeCompare(b.purchase_date));
+        break;
+      case "purchase_date_desc":
+        result.sort((a, b) => b.purchase_date.localeCompare(a.purchase_date));
+        break;
+      case "name_asc":
+        result.sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+        break;
+      case "name_desc":
+        result.sort((a, b) => b.name.localeCompare(a.name, "zh-CN"));
+        break;
+      default:
+        break;
+    }
+    return result;
+  }, [plants, searchKeyword, sortBy]);
 
   const invalidatePlantsAndOverview = () => {
     queryClient.invalidateQueries({ queryKey: ["plants"] });
@@ -124,6 +153,19 @@ export function PlantListPage() {
                     {loc}
                   </option>
                 ))}
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-40"
+              >
+                <option value="purchase_date_desc">购入日期：新→旧</option>
+                <option value="purchase_date_asc">购入日期：旧→新</option>
+                <option value="name_asc">名称拼音：正序</option>
+                <option value="name_desc">名称拼音：倒序</option>
               </Select>
             </div>
             <Button variant="outline" asChild>
