@@ -121,9 +121,15 @@ export function PlantListPage() {
         </p>
       )}
 
-      {plants && plants.length === 0 && (
+      {plants && plants.length === 0 && !locationFilter && (
         <p className="text-center text-muted-foreground py-12">
           暂无植物，点击上方按钮添加
+        </p>
+      )}
+
+      {plants && plants.length === 0 && locationFilter && (
+        <p className="text-center text-muted-foreground py-12">
+          当前位置暂无植物
         </p>
       )}
 

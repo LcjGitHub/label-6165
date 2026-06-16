@@ -8,6 +8,7 @@ import {
   Pencil,
   Trash2,
   Sprout,
+  MapPin,
 } from "lucide-react";
 import {
   fetchPlant,
@@ -237,6 +238,11 @@ export function PlantDetailPage() {
           <p>
             <span className="text-muted-foreground">购入日期：</span>
             {plant.purchase_date}
+          </p>
+          <p className="flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground">摆放位置：</span>
+            {plant.location || "—"}
           </p>
         </CardContent>
       </Card>

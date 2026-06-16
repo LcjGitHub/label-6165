@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -37,15 +38,15 @@ export function PlantFormDialog({
   } = useForm<PlantFormValues>({
     resolver: zodResolver(plantSchema),
     defaultValues: {
-      name: plant?.name ?? "",
-      variety: plant?.variety ?? "",
-      purchase_date: plant?.purchase_date ?? "",
-      location: plant?.location ?? "客厅",
+      name: "",
+      variety: "",
+      purchase_date: "",
+      location: "客厅",
     },
   });
 
-  const handleOpenChange = (next: boolean) => {
-    if (next) {
+  useEffect(() => {
+    if (open) {
       reset({
         name: plant?.name ?? "",
         variety: plant?.variety ?? "",
@@ -53,11 +54,18 @@ export function PlantFormDialog({
         location: plant?.location ?? "客厅",
       });
     }
+  }, [open, plant, reset]);
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      reset({ name: "", variety: "", purchase_date: "", location: "客厅" });
+    }
     onOpenChange(next);
   };
 
   const submit = async (data: PlantFormValues) => {
     await onSubmit(data);
+    reset({ name: "", variety: "", purchase_date: "", location: "客厅" });
     onOpenChange(false);
   };
 

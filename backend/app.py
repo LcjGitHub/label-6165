@@ -26,7 +26,9 @@ def validate_plant(data):
         errors.append("名称不能为空")
     if not purchase_date:
         errors.append("购入日期不能为空")
-    if location and location not in LOCATION_OPTIONS:
+    if not location:
+        errors.append("位置不能为空")
+    elif location not in LOCATION_OPTIONS:
         errors.append("位置必须是客厅、阳台、卧室、书房、其他中的一个")
     return errors, {"name": name, "variety": variety, "purchase_date": purchase_date, "location": location}
 
