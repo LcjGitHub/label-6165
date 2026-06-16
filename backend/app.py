@@ -299,6 +299,34 @@ def delete_watering(plant_id, watering_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/overview", methods=["GET"])
+def get_overview():
+    """获取养护概览统计数据。"""
+    conn = get_db()
+
+    plant_count = conn.execute("SELECT COUNT(*) AS count FROM plants").fetchone()["count"]
+    total_repotting_count = conn.execute("SELECT COUNT(*) AS count FROM repotting").fetchone()["count"]
+
+    last_repotting_row = conn.execute(
+        """
+        SELECT r.date, p.name AS plant_name
+        FROM repotting r
+        JOIN plants p ON r.plant_id = p.id
+        ORDER BY r.date DESC, r.id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify({
+        "plant_count": plant_count,
+        "total_repotting_count": total_repotting_count,
+        "last_repotting_date": last_repotting_row["date"] if last_repotting_row else None,
+        "last_repotting_plant_name": last_repotting_row["plant_name"] if last_repotting_row else None,
+    })
+
+
 if __name__ == "__main__":
     init_db()
     seed_if_empty()

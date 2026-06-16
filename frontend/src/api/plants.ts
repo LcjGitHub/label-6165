@@ -1,4 +1,5 @@
 import type {
+  OverviewStats,
   Plant,
   PlantDetail,
   PlantInput,
@@ -132,4 +133,9 @@ export function deleteWatering(
   return request(`${API_BASE}/plants/${plantId}/watering/${wateringId}`, {
     method: "DELETE",
   });
+}
+
+/** 获取养护概览统计 */
+export function fetchOverview(): Promise<OverviewStats> {
+  return request(`${API_BASE}/overview`);
 }

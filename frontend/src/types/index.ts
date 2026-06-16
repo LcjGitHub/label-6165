@@ -1,5 +1,12 @@
 /** API 类型定义 */
 
+export interface OverviewStats {
+  plant_count: number;
+  total_repotting_count: number;
+  last_repotting_date: string | null;
+  last_repotting_plant_name: string | null;
+}
+
 export interface Plant {
   id: number;
   name: string;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, Leaf, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3 } from "lucide-react";
 import { fetchPlants, createPlant, updatePlant, deletePlant } from "@/api/plants";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,10 +74,18 @@ export function PlantListPage() {
           <h1 className="text-2xl font-bold tracking-tight">家庭盆栽</h1>
           <p className="text-sm text-muted-foreground">换盆历史记录</p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          添加植物
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/overview">
+              <BarChart3 className="h-4 w-4" />
+              养护概览
+            </Link>
+          </Button>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            添加植物
+          </Button>
+        </div>
       </header>
 
       {isLoading && (
