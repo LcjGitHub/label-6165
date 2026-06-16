@@ -35,6 +35,7 @@ import {
 import { PlantFormDialog } from "@/components/PlantFormDialog";
 import { RepottingFormDialog } from "@/components/RepottingFormDialog";
 import { WateringFormDialog } from "@/components/WateringFormDialog";
+import { DeletePlantConfirmDialog } from "@/components/DeletePlantConfirmDialog";
 import type { Repotting, Watering } from "@/types";
 import type {
   PlantFormValues,
@@ -53,6 +54,7 @@ export function PlantDetailPage() {
   const [editingRepot, setEditingRepot] = useState<Repotting | undefined>();
   const [waterDialogOpen, setWaterDialogOpen] = useState(false);
   const [editingWater, setEditingWater] = useState<Watering | undefined>();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { data: plant, isLoading, error } = useQuery({
     queryKey: ["plant", plantId],
@@ -178,8 +180,12 @@ export function PlantDetailPage() {
     await deleteWaterMutation.mutateAsync(record.id);
   };
 
-  const handleDeletePlant = async () => {
-    if (!plant || !confirm(`确定删除「${plant.name}」？`)) return;
+  const handleDeletePlant = () => {
+    if (!plant) return;
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePlant = async () => {
     await deletePlantMutation.mutateAsync();
   };
 
@@ -459,6 +465,15 @@ export function PlantDetailPage() {
         onOpenChange={setWaterDialogOpen}
         record={editingWater}
         onSubmit={handleWaterSubmit}
+      />
+
+      <DeletePlantConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        plantName={plant?.name ?? ""}
+        repottingCount={plant?.repotting.length ?? 0}
+        wateringCount={plant?.watering.length ?? 0}
+        onConfirm={confirmDeletePlant}
       />
     </div>
   );

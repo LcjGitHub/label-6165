@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PlantFormDialog } from "@/components/PlantFormDialog";
+import { DeletePlantConfirmDialog } from "@/components/DeletePlantConfirmDialog";
 import { LOCATION_OPTIONS } from "@/lib/schemas";
 import type { Plant } from "@/types";
 import type { PlantFormValues } from "@/lib/schemas";
@@ -25,6 +26,8 @@ export function PlantListPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<Plant | undefined>();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingPlant, setDeletingPlant] = useState<Plant | undefined>();
   const [locationFilter, setLocationFilter] = useState<string>("");
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<boolean>(false);
@@ -114,9 +117,15 @@ export function PlantListPage() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (plant: Plant) => {
-    if (!confirm(`确定删除「${plant.name}」及其所有换盆记录？`)) return;
-    await deleteMutation.mutateAsync(plant.id);
+  const handleDelete = (plant: Plant) => {
+    setDeletingPlant(plant);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePlant = async () => {
+    if (!deletingPlant) return;
+    await deleteMutation.mutateAsync(deletingPlant.id);
+    setDeletingPlant(undefined);
   };
 
   const handleExport = async () => {
@@ -320,6 +329,14 @@ export function PlantListPage() {
         onOpenChange={setDialogOpen}
         plant={editingPlant}
         onSubmit={handleSubmit}
+      />
+
+      <DeletePlantConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        plantName={deletingPlant?.name ?? ""}
+        repottingCount={deletingPlant?.repotting_count ?? 0}
+        onConfirm={confirmDeletePlant}
       />
     </div>
   );
