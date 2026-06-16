@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin, AlertTriangle, Download, Loader2 } from "lucide-react";
+import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin, AlertTriangle, Download, Loader2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { fetchPlants, createPlant, updatePlant, deletePlant, exportPlants } from "@/api/plants";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -27,11 +28,23 @@ export function PlantListPage() {
   const [locationFilter, setLocationFilter] = useState<string>("");
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<boolean>(false);
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
 
   const { data: plants, isLoading, error } = useQuery({
     queryKey: ["plants", locationFilter],
     queryFn: () => fetchPlants(locationFilter || undefined),
   });
+
+  const filteredPlants = useMemo(() => {
+    if (!plants) return [];
+    if (!searchKeyword.trim()) return plants;
+    const keyword = searchKeyword.trim().toLowerCase();
+    return plants.filter(
+      (plant) =>
+        plant.name.toLowerCase().includes(keyword) ||
+        (plant.variety && plant.variety.toLowerCase().includes(keyword))
+    );
+  }, [plants, searchKeyword]);
 
   const invalidatePlantsAndOverview = () => {
     queryClient.invalidateQueries({ queryKey: ["plants"] });
@@ -91,12 +104,12 @@ export function PlantListPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">家庭盆栽</h1>
-          <p className="text-sm text-muted-foreground">换盆历史记录</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <header className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">家庭盆栽</h1>
+            <p className="text-sm text-muted-foreground">换盆历史记录</p>
+          </div>
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground" />
             <Select
@@ -131,6 +144,16 @@ export function PlantListPage() {
             添加植物
           </Button>
         </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="搜索植物名称或品种..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </header>
 
       {isLoading && (
@@ -155,9 +178,15 @@ export function PlantListPage() {
         </p>
       )}
 
-      {plants && plants.length > 0 && (
+      {plants && plants.length > 0 && filteredPlants.length === 0 && searchKeyword && (
+        <p className="text-center text-muted-foreground py-12">
+          未找到匹配「{searchKeyword}」的植物
+        </p>
+      )}
+
+      {filteredPlants && filteredPlants.length > 0 && (
         <div className="grid gap-4">
-          {plants.map((plant) => (
+          {filteredPlants.map((plant) => (
             <Card
               key={plant.id}
               className={`transition-shadow hover:shadow-md ${
