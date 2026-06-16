@@ -56,6 +56,9 @@ def init_db():
         conn.execute("ALTER TABLE plants ADD COLUMN location TEXT NOT NULL DEFAULT ''")
     if "repot_interval_months" not in columns:
         conn.execute("ALTER TABLE plants ADD COLUMN repot_interval_months INTEGER NOT NULL DEFAULT 12")
+        conn.execute("UPDATE plants SET repot_interval_months = 12 WHERE name = '绿萝'")
+        conn.execute("UPDATE plants SET repot_interval_months = 18 WHERE name = '多肉组合'")
+        conn.execute("UPDATE plants SET repot_interval_months = 24 WHERE name = '龟背竹'")
 
     conn.commit()
     conn.close()

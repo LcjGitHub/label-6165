@@ -188,12 +188,23 @@ export function PlantDetailPage() {
     );
   }
 
-  if (error || !plant) {
+  if (error) {
     return (
       <div className="mx-auto max-w-3xl p-6 text-center">
         <p className="text-destructive mb-4">
-          {error?.message ?? "植物不存在"}
+          网络连接失败，请确认后端服务已启动
         </p>
+        <Button variant="outline" asChild>
+          <Link to="/">返回列表</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (!plant) {
+    return (
+      <div className="mx-auto max-w-3xl p-6 text-center">
+        <p className="text-destructive mb-4">植物不存在</p>
         <Button variant="outline" asChild>
           <Link to="/">返回列表</Link>
         </Button>
