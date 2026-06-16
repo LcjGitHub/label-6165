@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin, AlertTriangle } from "lucide-react";
-import { fetchPlants, createPlant, updatePlant, deletePlant } from "@/api/plants";
+import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin, AlertTriangle, Download, Loader2 } from "lucide-react";
+import { fetchPlants, createPlant, updatePlant, deletePlant, exportPlants } from "@/api/plants";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import {
@@ -25,6 +25,7 @@ export function PlantListPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<Plant | undefined>();
   const [locationFilter, setLocationFilter] = useState<string>("");
+  const [exporting, setExporting] = useState(false);
 
   const { data: plants, isLoading, error } = useQuery({
     queryKey: ["plants", locationFilter],
@@ -75,6 +76,15 @@ export function PlantListPage() {
     await deleteMutation.mutateAsync(plant.id);
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportPlants();
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <header className="flex items-center justify-between">
@@ -103,6 +113,14 @@ export function PlantListPage() {
               <BarChart3 className="h-4 w-4" />
               养护概览
             </Link>
+          </Button>
+          <Button variant="outline" onClick={handleExport} disabled={exporting}>
+            {exporting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            {exporting ? "导出中…" : "导出数据"}
           </Button>
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />

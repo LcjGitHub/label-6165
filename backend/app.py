@@ -1,7 +1,7 @@
 """家庭盆栽换盆历史 — Flask API 服务。"""
 
 from datetime import datetime, timedelta
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 
 from db import get_db, init_db, row_to_dict
@@ -408,6 +408,63 @@ def delete_watering(plant_id, watering_id):
     conn.commit()
     conn.close()
     return jsonify({"ok": True})
+
+
+@app.route("/api/export", methods=["GET"])
+def export_plants():
+    """导出全部植物及换盆记录为 CSV 文件供浏览器下载。"""
+    import csv
+    import io
+
+    conn = get_db()
+    plants = conn.execute("SELECT * FROM plants ORDER BY created_at DESC").fetchall()
+    rows = []
+    for plant in plants:
+        p = row_to_dict(plant)
+        repottings = conn.execute(
+            "SELECT * FROM repotting WHERE plant_id = ? ORDER BY date DESC, id DESC",
+            (p["id"],),
+        ).fetchall()
+        if repottings:
+            for r in repottings:
+                rd = row_to_dict(r)
+                rows.append({
+                    "name": p["name"],
+                    "variety": p["variety"],
+                    "purchase_date": p["purchase_date"],
+                    "repotting_date": rd["date"],
+                    "repotting_notes": rd["notes"],
+                })
+        else:
+            rows.append({
+                "name": p["name"],
+                "variety": p["variety"],
+                "purchase_date": p["purchase_date"],
+                "repotting_date": "",
+                "repotting_notes": "",
+            })
+    conn.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["植物名称", "品种", "购入日期", "换盆日期", "换盆备注"])
+    for row in rows:
+        writer.writerow([
+            row["name"],
+            row["variety"],
+            row["purchase_date"],
+            row["repotting_date"],
+            row["repotting_notes"],
+        ])
+
+    csv_bytes = output.getvalue().encode("utf-8-sig")
+    return Response(
+        csv_bytes,
+        mimetype="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": "attachment; filename=plants_export.csv",
+        },
+    )
 
 
 @app.route("/api/overview", methods=["GET"])

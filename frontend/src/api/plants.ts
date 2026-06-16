@@ -142,3 +142,20 @@ export function deleteWatering(
 export function fetchOverview(): Promise<OverviewStats> {
   return request(`${API_BASE}/overview`);
 }
+
+/** 导出全部植物及换盆记录为 CSV 并触发浏览器下载 */
+export async function exportPlants(): Promise<void> {
+  const res = await fetch(`${API_BASE}/export`);
+  if (!res.ok) {
+    throw new Error(`导出失败 (${res.status})`);
+  }
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "plants_export.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
