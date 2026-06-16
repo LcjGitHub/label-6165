@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Leaf, RefreshCw, Calendar, ArrowLeft } from "lucide-react";
+import { Leaf, RefreshCw, Calendar, ArrowLeft, Flower2 } from "lucide-react";
 import { fetchOverview } from "@/api/plants";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,10 @@ export function OverviewPage() {
     queryKey: ["overview"],
     queryFn: fetchOverview,
   });
+
+  useEffect(() => {
+    document.title = "养护概览";
+  }, []);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
@@ -41,7 +46,7 @@ export function OverviewPage() {
 
       {error && (
         <p className="text-center text-destructive py-12">
-          加载失败：{error.message}
+          网络连接失败，请确认后端服务已启动
         </p>
       )}
 
@@ -85,34 +90,39 @@ export function OverviewPage() {
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-2 transition-shadow hover:shadow-md">
+          <Card className="transition-shadow hover:shadow-md">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                最近换盆
+                最近换盆日期
               </CardTitle>
-              <CardDescription>最新一次换盆记录</CardDescription>
+              <CardDescription>最新一次换盆的日期</CardDescription>
             </CardHeader>
             <CardContent>
-              {stats.last_repotting_date && stats.last_repotting_plant_name ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-bold text-primary">
-                      {stats.last_repotting_date}
-                    </span>
-                    <span className="text-lg text-muted-foreground">
-                      「{stats.last_repotting_plant_name}」
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {stats.last_repotting_plant_name} 最近一次换盆时间
-                  </p>
-                </div>
-              ) : (
-                <div className="text-muted-foreground">
-                  暂无换盆记录
-                </div>
-              )}
+              <div className="text-3xl font-bold text-primary">
+                {stats.last_repotting_date || "—"}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">
+                {stats.last_repotting_date ? "日期" : "暂无换盆记录"}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="transition-shadow hover:shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Flower2 className="h-5 w-5 text-primary" />
+                对应植物
+              </CardTitle>
+              <CardDescription>最近换盆的植物名称</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {stats.last_repotting_plant_name || "—"}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">
+                {stats.last_repotting_plant_name ? "植物名称" : "暂无换盆记录"}
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -28,20 +28,25 @@ export function PlantListPage() {
     queryFn: fetchPlants,
   });
 
+  const invalidatePlantsAndOverview = () => {
+    queryClient.invalidateQueries({ queryKey: ["plants"] });
+    queryClient.invalidateQueries({ queryKey: ["overview"] });
+  };
+
   const createMutation = useMutation({
     mutationFn: createPlant,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plants"] }),
+    onSuccess: invalidatePlantsAndOverview,
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: PlantFormValues }) =>
       updatePlant(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plants"] }),
+    onSuccess: invalidatePlantsAndOverview,
   });
 
   const deleteMutation = useMutation({
     mutationFn: deletePlant,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plants"] }),
+    onSuccess: invalidatePlantsAndOverview,
   });
 
   const handleSubmit = async (data: PlantFormValues) => {
@@ -94,7 +99,7 @@ export function PlantListPage() {
 
       {error && (
         <p className="text-center text-destructive py-12">
-          加载失败：{error.message}
+          网络连接失败，请确认后端服务已启动
         </p>
       )}
 

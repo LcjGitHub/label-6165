@@ -7,7 +7,10 @@ from db import get_db, init_db, row_to_dict
 from seed import seed_if_empty
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:7101", "http://127.0.0.1:7101"])
+CORS(app, origins=[
+    r"http://localhost:*",
+    r"http://127.0.0.1:*",
+])
 
 
 def validate_plant(data):

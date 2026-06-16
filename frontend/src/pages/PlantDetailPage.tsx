@@ -59,6 +59,7 @@ export function PlantDetailPage() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["plant", plantId] });
     queryClient.invalidateQueries({ queryKey: ["plants"] });
+    queryClient.invalidateQueries({ queryKey: ["overview"] });
   };
 
   const updatePlantMutation = useMutation({
@@ -70,6 +71,7 @@ export function PlantDetailPage() {
     mutationFn: () => deletePlant(plantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plants"] });
+      queryClient.invalidateQueries({ queryKey: ["overview"] });
       navigate("/");
     },
   });
