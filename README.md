@@ -2,6 +2,66 @@
 
 记录家中盆栽的换盆时间线，支持植物与换盆记录的增删改查。
 
+## 持续集成（CI）
+
+项目已配置 GitHub Actions 自动化流水线，确保代码质量和稳定性。
+
+### 流水线作用
+
+在代码提交和合并请求时自动执行以下检查，任一步骤失败则标记检查未通过：
+
+1. **安装依赖**：自动安装前端 npm 依赖和后端 Python 依赖
+2. **前端类型检查与构建**：执行 TypeScript 类型检查（`tsc -b`）和生产环境构建（`vite build`）
+3. **后端接口冒烟测试**：运行 12 个 API 接口测试用例，覆盖植物 CRUD、换盆记录、浇水记录、概览统计、CSV 导出等核心接口
+
+### 触发条件
+
+- **Push 事件**：向任意分支推送代码时自动触发
+- **Pull Request 事件**：向任意分支创建或更新合并请求时自动触发
+
+流水线配置文件位于 [.github/workflows/ci.yml](.github/workflows/ci.yml)。
+
+### 本地复现检查步骤
+
+在提交代码前，建议本地执行以下命令验证检查是否通过：
+
+#### 1. 安装前端依赖
+
+```bash
+cd frontend
+npm install
+```
+
+#### 2. 安装后端依赖
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+#### 3. 执行前端类型检查与生产构建
+
+```bash
+cd frontend
+npm run build
+```
+
+该命令会依次执行 `tsc -b`（TypeScript 类型检查）和 `vite build`（生产构建）。
+
+#### 4. 执行后端接口冒烟测试
+
+```bash
+cd backend
+python smoke_test.py
+```
+
+或使用 pytest 直接运行：
+
+```bash
+cd backend
+pytest smoke_test.py -v
+```
+
 ## 技术栈
 
 | 层级 | 技术 |
