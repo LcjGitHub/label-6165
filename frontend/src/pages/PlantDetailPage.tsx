@@ -280,10 +280,15 @@ export function PlantDetailPage() {
               )}
             </p>
           )}
-          {plant.days_since_last_repotting != null && (
+          {plant.last_repotting_date ? (
             <p>
               <span className="text-muted-foreground">距上次换盆：</span>
               {plant.days_since_last_repotting} 天
+            </p>
+          ) : (
+            <p>
+              <span className="text-muted-foreground">距上次换盆：</span>
+              暂未换盆
             </p>
           )}
         </CardContent>

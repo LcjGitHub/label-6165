@@ -250,7 +250,10 @@ export function PlantListPage() {
                     <Calendar className="h-4 w-4" />
                     购入：{plant.purchase_date}
                   </span>
-                  <span>换盆 {plant.repotting_count ?? 0} 次 · {plant.last_repotting_date ? `最近：${plant.last_repotting_date}` : "暂未换盆"}</span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    换盆 {plant.repotting_count ?? 0} 次 · {plant.last_repotting_date ? `最近：${plant.last_repotting_date}` : "暂未换盆"}
+                  </span>
                   {plant.next_repotting_date && (
                     <span
                       className={`flex items-center gap-1 ${

@@ -190,6 +190,7 @@ def get_plant(plant_id):
 
     last_repot_date = repotting[0]["date"] if repotting else None
     result = row_to_dict(plant)
+    result["last_repotting_date"] = last_repot_date
     repot_info = compute_repotting_info(result, last_repot_date)
     result.update(repot_info)
     result["repotting"] = [row_to_dict(r) for r in repotting]
