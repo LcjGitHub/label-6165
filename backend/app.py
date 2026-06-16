@@ -12,6 +12,8 @@ CORS(app, origins=[
     r"http://127.0.0.1:*",
 ])
 
+LOCATION_OPTIONS = {"客厅", "阳台", "卧室", "书房", "其他"}
+
 
 def validate_plant(data):
     """校验植物字段。"""
@@ -19,11 +21,14 @@ def validate_plant(data):
     name = (data.get("name") or "").strip()
     variety = (data.get("variety") or "").strip()
     purchase_date = (data.get("purchase_date") or "").strip()
+    location = (data.get("location") or "").strip()
     if not name:
         errors.append("名称不能为空")
     if not purchase_date:
         errors.append("购入日期不能为空")
-    return errors, {"name": name, "variety": variety, "purchase_date": purchase_date}
+    if location and location not in LOCATION_OPTIONS:
+        errors.append("位置必须是客厅、阳台、卧室、书房、其他中的一个")
+    return errors, {"name": name, "variety": variety, "purchase_date": purchase_date, "location": location}
 
 
 def validate_repotting(data):
@@ -48,17 +53,33 @@ def validate_watering(data):
 
 @app.route("/api/plants", methods=["GET"])
 def list_plants():
-    """获取植物列表（含换盆次数）。"""
+    """获取植物列表（含换盆次数），支持按位置筛选。"""
+    location = request.args.get("location", "").strip()
     conn = get_db()
-    rows = conn.execute(
-        """
-        SELECT p.*, COUNT(r.id) AS repotting_count
-        FROM plants p
-        LEFT JOIN repotting r ON r.plant_id = p.id
-        GROUP BY p.id
-        ORDER BY p.created_at DESC
-        """
-    ).fetchall()
+
+    if location and location in LOCATION_OPTIONS:
+        rows = conn.execute(
+            """
+            SELECT p.*, COUNT(r.id) AS repotting_count
+            FROM plants p
+            LEFT JOIN repotting r ON r.plant_id = p.id
+            WHERE p.location = ?
+            GROUP BY p.id
+            ORDER BY p.created_at DESC
+            """,
+            (location,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT p.*, COUNT(r.id) AS repotting_count
+            FROM plants p
+            LEFT JOIN repotting r ON r.plant_id = p.id
+            GROUP BY p.id
+            ORDER BY p.created_at DESC
+            """
+        ).fetchall()
+
     conn.close()
     return jsonify([row_to_dict(r) for r in rows])
 
@@ -97,8 +118,8 @@ def create_plant():
 
     conn = get_db()
     cursor = conn.execute(
-        "INSERT INTO plants (name, variety, purchase_date) VALUES (?, ?, ?)",
-        (fields["name"], fields["variety"], fields["purchase_date"]),
+        "INSERT INTO plants (name, variety, purchase_date, location) VALUES (?, ?, ?, ?)",
+        (fields["name"], fields["variety"], fields["purchase_date"], fields["location"]),
     )
     plant_id = cursor.lastrowid
     conn.commit()
@@ -121,8 +142,8 @@ def update_plant(plant_id):
         return jsonify({"error": "植物不存在"}), 404
 
     conn.execute(
-        "UPDATE plants SET name = ?, variety = ?, purchase_date = ? WHERE id = ?",
-        (fields["name"], fields["variety"], fields["purchase_date"], plant_id),
+        "UPDATE plants SET name = ?, variety = ?, purchase_date = ?, location = ? WHERE id = ?",
+        (fields["name"], fields["variety"], fields["purchase_date"], fields["location"], plant_id),
     )
     conn.commit()
     plant = conn.execute("SELECT * FROM plants WHERE id = ?", (plant_id,)).fetchone()

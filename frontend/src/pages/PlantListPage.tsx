@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3 } from "lucide-react";
+import { Plus, Leaf, Calendar, Pencil, Trash2, BarChart3, MapPin } from "lucide-react";
 import { fetchPlants, createPlant, updatePlant, deletePlant } from "@/api/plants";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -12,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PlantFormDialog } from "@/components/PlantFormDialog";
+import { LOCATION_OPTIONS } from "@/lib/schemas";
 import type { Plant } from "@/types";
 import type { PlantFormValues } from "@/lib/schemas";
 
@@ -22,10 +24,11 @@ export function PlantListPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlant, setEditingPlant] = useState<Plant | undefined>();
+  const [locationFilter, setLocationFilter] = useState<string>("");
 
   const { data: plants, isLoading, error } = useQuery({
-    queryKey: ["plants"],
-    queryFn: fetchPlants,
+    queryKey: ["plants", locationFilter],
+    queryFn: () => fetchPlants(locationFilter || undefined),
   });
 
   const invalidatePlantsAndOverview = () => {
@@ -79,7 +82,22 @@ export function PlantListPage() {
           <h1 className="text-2xl font-bold tracking-tight">家庭盆栽</h1>
           <p className="text-sm text-muted-foreground">换盆历史记录</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <Select
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="w-32"
+            >
+              <option value="">全部位置</option>
+              {LOCATION_OPTIONS.map((loc) => (
+                <option key={loc} value={loc}>
+                  {loc}
+                </option>
+              ))}
+            </Select>
+          </div>
           <Button variant="outline" asChild>
             <Link to="/overview">
               <BarChart3 className="h-4 w-4" />
@@ -124,6 +142,12 @@ export function PlantListPage() {
                       <CardDescription className="mt-1">
                         品种：{plant.variety}
                       </CardDescription>
+                    )}
+                    {plant.location && (
+                      <span className="inline-flex items-center mt-2 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {plant.location}
+                      </span>
                     )}
                   </Link>
                   <div className="flex gap-1">

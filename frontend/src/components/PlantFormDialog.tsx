@@ -3,13 +3,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { plantSchema, type PlantFormValues } from "@/lib/schemas";
+import { plantSchema, LOCATION_OPTIONS, type PlantFormValues } from "@/lib/schemas";
 import type { Plant } from "@/types";
 
 interface PlantFormDialogProps {
@@ -39,6 +40,7 @@ export function PlantFormDialog({
       name: plant?.name ?? "",
       variety: plant?.variety ?? "",
       purchase_date: plant?.purchase_date ?? "",
+      location: plant?.location ?? "客厅",
     },
   });
 
@@ -48,6 +50,7 @@ export function PlantFormDialog({
         name: plant?.name ?? "",
         variety: plant?.variety ?? "",
         purchase_date: plant?.purchase_date ?? "",
+        location: plant?.location ?? "客厅",
       });
     }
     onOpenChange(next);
@@ -86,6 +89,21 @@ export function PlantFormDialog({
             {errors.purchase_date && (
               <p className="text-sm text-destructive">
                 {errors.purchase_date.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location">摆放位置</Label>
+            <Select id="location" {...register("location")}>
+              {LOCATION_OPTIONS.map((loc) => (
+                <option key={loc} value={loc}>
+                  {loc}
+                </option>
+              ))}
+            </Select>
+            {errors.location && (
+              <p className="text-sm text-destructive">
+                {errors.location.message}
               </p>
             )}
           </div>

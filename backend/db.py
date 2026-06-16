@@ -17,7 +17,7 @@ def get_db():
 
 
 def init_db():
-    """创建表结构（若不存在）。"""
+    """创建表结构（若不存在），并执行必要的迁移。"""
     conn = get_db()
     conn.executescript(
         """
@@ -26,6 +26,7 @@ def init_db():
             name TEXT NOT NULL,
             variety TEXT NOT NULL DEFAULT '',
             purchase_date TEXT NOT NULL,
+            location TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
@@ -48,6 +49,12 @@ def init_db():
         );
         """
     )
+
+    cursor = conn.execute("PRAGMA table_info(plants)")
+    columns = [col[1] for col in cursor.fetchall()]
+    if "location" not in columns:
+        conn.execute("ALTER TABLE plants ADD COLUMN location TEXT NOT NULL DEFAULT ''")
+
     conn.commit()
     conn.close()
 

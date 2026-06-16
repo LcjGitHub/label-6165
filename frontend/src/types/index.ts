@@ -12,6 +12,7 @@ export interface Plant {
   name: string;
   variety: string;
   purchase_date: string;
+  location: string;
   created_at: string;
   repotting_count?: number;
 }
@@ -41,6 +42,7 @@ export interface PlantInput {
   name: string;
   variety: string;
   purchase_date: string;
+  location: string;
 }
 
 export interface RepottingInput {

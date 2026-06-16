@@ -34,8 +34,11 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 /** 获取植物列表 */
-export function fetchPlants(): Promise<Plant[]> {
-  return request(`${API_BASE}/plants`);
+export function fetchPlants(location?: string): Promise<Plant[]> {
+  const url = location
+    ? `${API_BASE}/plants?location=${encodeURIComponent(location)}`
+    : `${API_BASE}/plants`;
+  return request(url);
 }
 
 /** 获取植物详情（含换盆时间线） */
