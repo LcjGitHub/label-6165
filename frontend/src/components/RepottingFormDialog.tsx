@@ -38,6 +38,7 @@ export function RepottingFormDialog({
     resolver: zodResolver(repottingSchema),
     defaultValues: {
       date: record?.date ?? "",
+      pot_diameter_cm: record?.pot_diameter_cm ?? null,
       notes: record?.notes ?? "",
     },
   });
@@ -46,6 +47,7 @@ export function RepottingFormDialog({
     if (next) {
       reset({
         date: record?.date ?? "",
+        pot_diameter_cm: record?.pot_diameter_cm ?? null,
         notes: record?.notes ?? "",
       });
     }
@@ -69,6 +71,21 @@ export function RepottingFormDialog({
             <Input id="date" type="date" {...register("date")} />
             {errors.date && (
               <p className="text-sm text-destructive">{errors.date.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pot_diameter_cm">盆径（厘米）</Label>
+            <Input
+              id="pot_diameter_cm"
+              type="number"
+              min="1"
+              placeholder="可选，新花盆直径"
+              {...register("pot_diameter_cm")}
+            />
+            {errors.pot_diameter_cm && (
+              <p className="text-sm text-destructive">
+                {errors.pot_diameter_cm.message}
+              </p>
             )}
           </div>
           <div className="space-y-2">

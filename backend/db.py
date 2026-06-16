@@ -34,6 +34,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             plant_id INTEGER NOT NULL,
             date TEXT NOT NULL,
+            pot_diameter_cm INTEGER,
             notes TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY (plant_id) REFERENCES plants(id) ON DELETE CASCADE
@@ -59,6 +60,11 @@ def init_db():
         conn.execute("UPDATE plants SET repot_interval_months = 12 WHERE name = '绿萝'")
         conn.execute("UPDATE plants SET repot_interval_months = 18 WHERE name = '多肉组合'")
         conn.execute("UPDATE plants SET repot_interval_months = 24 WHERE name = '龟背竹'")
+
+    cursor = conn.execute("PRAGMA table_info(repotting)")
+    repotting_columns = [col[1] for col in cursor.fetchall()]
+    if "pot_diameter_cm" not in repotting_columns:
+        conn.execute("ALTER TABLE repotting ADD COLUMN pot_diameter_cm INTEGER")
 
     conn.commit()
     conn.close()

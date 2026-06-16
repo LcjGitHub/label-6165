@@ -23,6 +23,16 @@ export const plantSchema = z.object({
 /** 换盆记录表单校验 schema */
 export const repottingSchema = z.object({
   date: z.string().min(1, "换盆日期不能为空"),
+  pot_diameter_cm: z
+    .union([z.string(), z.number(), z.null()])
+    .optional()
+    .transform((val) => {
+      if (val === null || val === undefined || val === "") return null;
+      return typeof val === "string" ? parseInt(val, 10) : val;
+    })
+    .refine((val) => val === null || (!Number.isNaN(val) && val > 0), {
+      message: "盆径必须为正整数",
+    }),
   notes: z.string(),
 });
 

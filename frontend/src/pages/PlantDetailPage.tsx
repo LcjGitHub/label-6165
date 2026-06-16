@@ -11,6 +11,7 @@ import {
   MapPin,
   AlertTriangle,
   Clock,
+  Circle,
 } from "lucide-react";
 import {
   fetchPlant,
@@ -326,6 +327,12 @@ export function PlantDetailPage() {
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         {record.date}
                       </CardTitle>
+                      {record.pot_diameter_cm && (
+                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                          <Circle className="h-3 w-3" />
+                          新盆直径：{record.pot_diameter_cm} 厘米
+                        </p>
+                      )}
                       {record.notes && (
                         <CardDescription className="mt-2 text-foreground/80">
                           {record.notes}

@@ -102,9 +102,19 @@ def validate_repotting(data):
     errors = []
     date = (data.get("date") or "").strip()
     notes = (data.get("notes") or "").strip()
+    pot_diameter_cm = data.get("pot_diameter_cm")
     if not date:
         errors.append("换盆日期不能为空")
-    return errors, {"date": date, "notes": notes}
+    if pot_diameter_cm is not None and pot_diameter_cm != "":
+        try:
+            pot_diameter_cm = int(pot_diameter_cm)
+            if pot_diameter_cm <= 0:
+                errors.append("盆径必须为正整数")
+        except (ValueError, TypeError):
+            errors.append("盆径必须为正整数")
+    else:
+        pot_diameter_cm = None
+    return errors, {"date": date, "pot_diameter_cm": pot_diameter_cm, "notes": notes}
 
 
 def validate_watering(data):
@@ -151,7 +161,7 @@ def list_plants():
     result = []
     for row in rows:
         plant = row_to_dict(row)
-        last_repot = plant.pop("last_repotting_date", None)
+        last_repot = plant.get("last_repotting_date")
         repot_info = compute_repotting_info(plant, last_repot)
         plant.update(repot_info)
         result.append(plant)
@@ -205,6 +215,7 @@ def create_plant():
     plant = conn.execute("SELECT * FROM plants WHERE id = ?", (plant_id,)).fetchone()
     last_repot = get_last_repotting_date(conn, plant_id)
     result = row_to_dict(plant)
+    result["last_repotting_date"] = last_repot
     repot_info = compute_repotting_info(result, last_repot)
     result.update(repot_info)
     conn.close()
@@ -232,6 +243,7 @@ def update_plant(plant_id):
     plant = conn.execute("SELECT * FROM plants WHERE id = ?", (plant_id,)).fetchone()
     last_repot = get_last_repotting_date(conn, plant_id)
     result = row_to_dict(plant)
+    result["last_repotting_date"] = last_repot
     repot_info = compute_repotting_info(result, last_repot)
     result.update(repot_info)
     conn.close()
@@ -270,8 +282,8 @@ def create_repotting(plant_id):
         return jsonify({"errors": errors}), 400
 
     cursor = conn.execute(
-        "INSERT INTO repotting (plant_id, date, notes) VALUES (?, ?, ?)",
-        (plant_id, fields["date"], fields["notes"]),
+        "INSERT INTO repotting (plant_id, date, pot_diameter_cm, notes) VALUES (?, ?, ?, ?)",
+        (plant_id, fields["date"], fields["pot_diameter_cm"], fields["notes"]),
     )
     repot_id = cursor.lastrowid
     conn.commit()
@@ -297,8 +309,8 @@ def update_repotting(plant_id, repot_id):
         return jsonify({"error": "换盆记录不存在"}), 404
 
     conn.execute(
-        "UPDATE repotting SET date = ?, notes = ? WHERE id = ?",
-        (fields["date"], fields["notes"], repot_id),
+        "UPDATE repotting SET date = ?, pot_diameter_cm = ?, notes = ? WHERE id = ?",
+        (fields["date"], fields["pot_diameter_cm"], fields["notes"], repot_id),
     )
     conn.commit()
     record = conn.execute("SELECT * FROM repotting WHERE id = ?", (repot_id,)).fetchone()
@@ -433,6 +445,7 @@ def export_plants():
                     "variety": p["variety"],
                     "purchase_date": p["purchase_date"],
                     "repotting_date": rd["date"],
+                    "pot_diameter_cm": rd.get("pot_diameter_cm", "") or "",
                     "repotting_notes": rd["notes"],
                 })
         else:
@@ -441,19 +454,21 @@ def export_plants():
                 "variety": p["variety"],
                 "purchase_date": p["purchase_date"],
                 "repotting_date": "",
+                "pot_diameter_cm": "",
                 "repotting_notes": "",
             })
     conn.close()
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["植物名称", "品种", "购入日期", "换盆日期", "换盆备注"])
+    writer.writerow(["植物名称", "品种", "购入日期", "换盆日期", "盆径(厘米)", "换盆备注"])
     for row in rows:
         writer.writerow([
             row["name"],
             row["variety"],
             row["purchase_date"],
             row["repotting_date"],
+            row["pot_diameter_cm"],
             row["repotting_notes"],
         ])
 
